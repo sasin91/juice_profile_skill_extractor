@@ -1,0 +1,6 @@
+spacy
+danlp[all]
+skillNer
+IPython
+gensim
+torch
