@@ -1,10 +1,11 @@
 setuptools
 wheel
 spacy
-danlp[all]
+googletrans==3.1.0a0
 skillNer
 IPython
 gensim
 torch
 flask
 flask-cors
+langdetect

@@ -4,6 +4,8 @@ from spacy.matcher import PhraseMatcher
 from skillNer.general_params import SKILL_DB
 from skillNer.skill_extractor_class import SkillExtractor
 import spacy
+from langdetect import detect
+from googletrans import Translator
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -14,6 +16,9 @@ nlp = spacy.load("en_core_web_lg")
 # Initialize skill extractor
 skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
 
+# Initialize translator
+translator = Translator()
+
 @app.route('/extract-skills', methods=['POST'])
 def extract_skills():
     try:
@@ -23,6 +28,17 @@ def extract_skills():
             return jsonify({'error': 'No text provided'}), 400
         
         input_text = data['text']
+        
+        # Detect language
+        try:
+            lang = detect(input_text)
+        except:
+            lang = 'en'  # Default to English if language detection fails
+        
+        # If text is not in English, translate it
+        if lang != 'en':
+            translated = translator.translate(input_text, dest='en')
+            input_text = translated.text
         
         # Process the text
         annotations = skill_extractor.annotate(input_text)
@@ -58,7 +74,7 @@ def extract_skills():
         # Sort skills alphabetically
         skills.sort()
         
-        return jsonify({'skills': skills})
+        return jsonify({'skills': skills, 'original_language': lang})
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
