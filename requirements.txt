@@ -6,3 +6,5 @@ skillNer
 IPython
 gensim
 torch
+flask
+flask-cors

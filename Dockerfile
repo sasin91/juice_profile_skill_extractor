@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir skillNer
 RUN pip install --no-cache-dir IPython
 RUN pip install --no-cache-dir gensim==4.3.2
 RUN pip install --no-cache-dir torch
+RUN pip install --no-cache-dir flask flask-cors
 
 # Create output directory
 RUN mkdir -p /app/output
@@ -30,5 +31,8 @@ RUN mkdir -p /app/output
 # Copy the rest of the application
 COPY . .
 
-# Command to run when container starts
-CMD ["python", "main.py", "test_output"] 
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Command to run the application
+CMD ["python", "app.py"] 
