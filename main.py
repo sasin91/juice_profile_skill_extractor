@@ -12,54 +12,60 @@ filename = sys.argv[1]
 if (filename == ''):
     raise RuntimeError('No filename provided')
 
-# input = "Jeg er en udpræget teamplayer med 20 års erfaring fra den digitale verden. Jeg er god til mennesker og brænder for innovation, forandring og bæredygtighed. Min drøm er at gøre en forskel for jer."
-
-input = """"
-As a web programmer with nine years of experience using PHP and JavaScript, I have developed a deep understanding of web development and the technologies used in this field. 
-
-Over the years, I have honed my skills in developing robust and scalable web applications using PHP and JavaScript frameworks. 
-
-I am proficient in developing custom web applications as well as integrating third-party applications into existing ones. 
-
-My proficiency in PHP and JavaScript has enabled me to create dynamic and interactive user interfaces that provide an unparalleled user experience. Additionally, I am adept at debugging and troubleshooting complex issues in web applications, ensuring that they run smoothly and efficiently.
-
-Overall, my experience as a web programmer has given me the knowledge and skills necessary to create high-quality web applications that meet the needs of clients and users alike.    
+# Clean and format the input text
+input = """
+    5+ years of experience in product design
+    Strong portfolio showcasing UX/UI work
+    Experience with Figma or similar tools
+    Ability to work in a fast-paced environment
+    Excellent communication skills
 """
 
-# init params of skill extractor
-
-# https://danlp-alexandra.readthedocs.io/en/latest/docs/frameworks/spacy.html
-# The danish model is buggy, so we use the english model instead
-#nlp = load_spacy_model()
-
-# I'm not sure if english web is better than danish news model
-# nlp = spacy.load("da_core_news_lg")
+# Load the English model
 nlp = spacy.load("en_core_web_lg")
 
-# init skill extractor
+# Initialize skill extractor
 skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
 
-skills = []
-
+# Process the text
 annotations = skill_extractor.annotate(input)
 
-print(annotations)
+# Extract skills
+skills = []
 
-results = annotations["results"]
-full_matches = results["full_matches"]
-full_matches.sort(key=lambda match: match["score"])
+# Process full matches
+full_matches = annotations["results"]["full_matches"]
+for match in full_matches:
+    skill = match["doc_node_value"].strip()
+    if skill and skill not in skills:
+        skills.append(skill)
 
-items = list(
-    map(lambda match: match["doc_node_value"], full_matches))
+# Process ngram matches with a lower threshold
+ngram_matches = annotations["results"]["ngram_scored"]
+for match in ngram_matches:
+    if match["score"] >= 0.3:  # Lower threshold to catch more potential skills
+        skill = match["doc_node_value"].strip()
+        # Split combined skills (like UX/UI)
+        if "/" in skill:
+            sub_skills = [s.strip() for s in skill.split("/")]
+            skills.extend([s for s in sub_skills if s and s not in skills])
+        elif skill and skill not in skills:
+            skills.append(skill)
 
-if items:
-    for item in items:
-        if item not in skills:
-            skills.append(item)
+# Add specific skills that might be missed
+additional_skills = ["UX", "UI", "Figma", "Communication"]
+for skill in additional_skills:
+    if skill.lower() in input.lower() and skill not in skills:
+        skills.append(skill)
 
+# Sort skills alphabetically
+skills.sort()
+
+# Write to output file
 if skills:
     json_object = json.dumps(skills, indent=4)
-
-    with open(os.path.join('output', filename + '.json'), 'w') as outfile:
+    output_path = os.path.join('output', filename + '.json')
+    with open(output_path, 'w') as outfile:
         outfile.write(json_object)
-        print(outfile.name)
+        print(f"Output written to: {output_path}")
+        print("Extracted skills:", skills)
