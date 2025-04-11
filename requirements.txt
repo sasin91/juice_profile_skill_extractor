@@ -1,11 +1,12 @@
 setuptools
 wheel
-spacy
+spacy==3.7.2
 googletrans==3.1.0a0
 skillNer
 IPython
-gensim
-torch
+gensim==4.3.2
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.1+cpu
 flask
 flask-cors
 langdetect

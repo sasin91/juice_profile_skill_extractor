@@ -11,13 +11,31 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Load the English model
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_sm")
 
 # Initialize skill extractor
 skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
 
 # Initialize translator
 translator = Translator()
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    try:
+        # Test if NLP model is working
+        test_doc = nlp("Test")
+        # Test if skill extractor is working
+        test_annotations = skill_extractor.annotate("Test")
+        return jsonify({
+            "status": "healthy",
+            "nlp_model": "en_core_web_sm",
+            "skill_extractor": "ready"
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "error": str(e)
+        }), 500
 
 @app.route('/extract-skills', methods=['POST'])
 def extract_skills():
